@@ -17,15 +17,13 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    // Stop and remove any existing container with the same name
-                    // try {
-                    //     sh "docker stop react_app"
-                    //     sh "docker rm react_app"
-                    // } catch (Exception e) {
-                    //     echo 'No existing container to remove.'
-                    // }
+                    try {
+                        bat "docker stop travelix"
+                        bat "docker rm travelix"
+                    } catch (Exception e) {
+                        echo 'No existing container to remove.'
+                    }
 
-                    // Run the new container
                     docker.image("${IMAGE_NAME}:${env.BUILD_ID}").run('-d --name travelix -p 3000:80')
                 }
             }
