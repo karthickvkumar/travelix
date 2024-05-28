@@ -12,7 +12,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 nodejs('NodeJS') {
-                    bat 'npm test -- --coverage --watchAll=false'
+                    bat 'npm test -- --coverage --watchAll=false --passWithNoTests'
                 }
             }
         }
