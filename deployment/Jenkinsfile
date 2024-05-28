@@ -1,27 +1,25 @@
 pipeline {
     agent any
-    tools {
-        nodejs 'NodeJS' 
-    }
+
     stages {
         stage('Install Dependencies') {
             steps {
-                script {
-                    sh 'npm install'
+                nodejs('NodeJS') {
+                    bat 'npm install'
                 }
             }
         }
         stage('Run Tests') {
             steps {
-                script {
-                    sh 'npm test'
+                nodejs('NodeJS') {
+                    bat 'npm test -- --coverage --watchAll=false'
                 }
             }
         }
         stage('Build') {
             steps {
-                script {
-                    sh 'npm run build'
+                nodejs('NodeJS') {
+                    bat 'npm run build'
                 }
             }
         }
