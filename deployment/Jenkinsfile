@@ -50,4 +50,23 @@ pipeline {
         //     }
         // }
     }
+    post {
+        always {
+            cleanWs()
+            script {
+                try {
+                    bat "docker stop react_app"
+                    bat "docker rm react_app"
+                } catch (Exception e) {
+                    echo 'No existing container to stop or remove.'
+                }
+            }
+        }
+        success {
+            echo 'Build and deploy successful.'
+        }
+        failure {
+            echo 'Build or deploy failed.'
+        }
+    }
 }
