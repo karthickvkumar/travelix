@@ -3,29 +3,53 @@ pipeline {
 
     environment {
         CI = 'false'
+        IMAGE_NAME = 'travelix'
     }
-    
+
     stages {
-        stage('Install Dependencies') {
+        stage('Build Docker Image') {
             steps {
-                nodejs('NodeJS') {
-                    bat 'npm install'
+                script {
+                    docker.build("${IMAGE_NAME}:${env.BUILD_ID}")
                 }
             }
         }
-        stage('Run Tests') {
+        stage('Run Docker Container') {
             steps {
-                nodejs('NodeJS') {
-                    bat 'npm test -- --coverage --watchAll=false --passWithNoTests'
+                script {
+                    // Stop and remove any existing container with the same name
+                    // try {
+                    //     sh "docker stop react_app"
+                    //     sh "docker rm react_app"
+                    // } catch (Exception e) {
+                    //     echo 'No existing container to remove.'
+                    // }
+
+                    // Run the new container
+                    docker.image("${IMAGE_NAME}:${env.BUILD_ID}").run('-d --name travelix -p 3000:80')
                 }
             }
         }
-        stage('Build') {
-            steps {
-                nodejs('NodeJS') {
-                    bat 'npm run build'
-                }
-            }
-        }
+        // stage('Install Dependencies') {
+        //     steps {
+        //         nodejs('NodeJS') {
+        //             bat 'npm install'
+        //         }
+        //     }
+        // }
+        // stage('Run Tests') {
+        //     steps {
+        //         nodejs('NodeJS') {
+        //             bat 'npm test -- --coverage --watchAll=false --passWithNoTests'
+        //         }
+        //     }
+        // }
+        // stage('Build') {
+        //     steps {
+        //         nodejs('NodeJS') {
+        //             bat 'npm run build'
+        //         }
+        //     }
+        // }
     }
 }
