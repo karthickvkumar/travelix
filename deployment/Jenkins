@@ -1,0 +1,107 @@
+pipeline {
+    agent any
+
+    environment {
+        COMPOSE_FILE = 'docker-compose.yml'
+        TARGET_URL = 'http://app:8000'  // Adjust this based on your application's internal URL
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Checkout your source code from your repository
+                checkout scm
+            }
+        }
+
+        stage('Build and Deploy') {
+            steps {
+                script {
+                    // Build and start the Docker containers using Docker Compose
+                    sh 'docker-compose -f $COMPOSE_FILE up -d --build'
+                }
+            }
+        }
+
+        stage('Run ZAP Scan') {
+            steps {
+                script {
+                    // Run ZAP scan using zap-cli within the ZAP container
+                    // docker exec -it zap sh
+                    // curl http://localhost:4000/JSON/core/view/version/
+
+                    // docker-compose up -d
+                    // docker exec zap zap.sh -cmd -dir test -quickurl http://web:4000 -quickout /zap/wrk/report.html
+                    // # Start the ZAP daemon (already done by the entrypoint)
+                    // docker exec zap zap.sh -daemon -host 0.0.0.0 -port 8080
+
+                    // # Wait for ZAP to initialize
+                    // sleep 10
+
+                    // # Run spider
+                    // docker exec zap zap.sh -cmd -spider http://webapp:8000
+
+                    // # Run active scan
+                    // docker exec zap zap.sh -cmd -scan http://webapp:8000
+    
+                    sh '''
+                    docker-compose -f $COMPOSE_FILE exec zap zap-cli status -t 120
+                    docker-compose -f $COMPOSE_FILE exec zap zap-cli open-url $TARGET_URL
+                    docker-compose -f $COMPOSE_FILE exec zap zap-cli spider $TARGET_URL
+                    docker-compose -f $COMPOSE_FILE exec zap zap-cli active-scan $TARGET_URL
+                    docker-compose -f $COMPOSE_FILE exec zap zap-cli report -o /zap/wrk/zap_report.html -f html
+                    '''
+                }
+            }
+        }
+
+        stage('Publish Report') {
+            steps {
+                // Copy the report from the Docker container to the host machine
+                sh 'docker cp zap:/zap/wrk/zap_report.html .'
+                
+                // Publish the report in Jenkins
+                publishHTML(target: [
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: '',
+                    reportFiles: 'zap_report.html',
+                    reportName: 'ZAP Report'
+                ])
+            }
+        }
+    }
+
+    post {
+        always {
+            // Clean up Docker containers
+            sh 'docker-compose -f $COMPOSE_FILE down'
+        }
+    }
+}
+
+
+/*
+
+version: '3.3'
+services: 
+  web:
+    build: .
+    ports:
+      - "3000:80"
+
+  app:
+    image:  :stable
+    container_name: zap
+    ports:
+      - "4000:80"
+    entrypoint: ["zap.sh", "-daemon", "-port", "4000", "-host", "0.0.0.0", "-config", "api.disablekey=true"]
+    depends_on:
+      - web
+    volumes:
+      - ./zap/wrk:/zap/wrk
+
+.\zap.bat -quickurl https://reqres.in/ -quickprogress -cmd -quickout C:\Users\Karthick\Documents\Concord\Learning/report.html
+
+*/
