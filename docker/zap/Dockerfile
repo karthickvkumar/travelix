@@ -38,6 +38,16 @@ WORKDIR C:\\zap\\ZAP_2.15.0
 
 # Expose ZAP port
 EXPOSE 8080
+COPY zap.ps1 ./
+
+# Expose the port your app runs on
+EXPOSE 8082
+
+# Start ZAP using the startup script
+CMD ["powershell.exe", "-File", "zap.ps1"]
 
 # Start ZAP in interactive mode
-CMD ["CMD", "/K", "ZAP.bat",  "-cmd", "-port", "8082", "-host", "0.0.0.0", "-config", "api.disablekey=true", "-quickurl", "http://localhost:3000/", "-quickprogress", "-quickout", "C:\\zap\\reports\\report.html"]
+# CMD ["CMD", "/K", "ZAP.bat",  "-cmd", "-port", "8082", "-host", "0.0.0.0", "-config", "api.disablekey=true", "-quickurl", "http://localhost:3000/", "-quickprogress", "-quickout", "C:\\zap\\reports\\report.html"]
+
+# CMD ["CMD", "/C", "timeout /t 30 && ZAP.bat -cmd -port 8082 -host 0.0.0.0 -config api.disablekey=true -quickurl http://localhost:3000/ -quickprogress -quickout C:\\zap\\reports\\report.html"]
+
